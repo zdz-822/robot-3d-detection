@@ -51,4 +51,13 @@ def generate_launch_description():
         }],
         output="screen",
     )
-    return LaunchDescription(arguments + [pose_bridge, detector])
+    visualizer = Node(
+        package="robot_3d_detection",
+        executable="detection_marker_visualizer",
+        parameters=[{
+            "input_topic": "/perception/detections",
+            "marker_topic": "/perception/markers",
+        }],
+        output="screen",
+    )
+    return LaunchDescription(arguments + [pose_bridge, detector, visualizer])

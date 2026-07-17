@@ -51,6 +51,16 @@ def generate_launch_description():
         }],
         output="screen",
     )
+    visualizer = Node(
+        package="robot_3d_detection",
+        executable="detection_marker_visualizer",
+        name="g1_sensor_sim_visualizer",
+        parameters=[{
+            "input_topic": "/g1_sim/perception/detections",
+            "marker_topic": "/g1_sim/perception/markers",
+        }],
+        output="screen",
+    )
     shutdown_after_replay = RegisterEventHandler(
         OnProcessExit(target_action=replay, on_exit=[EmitEvent(event=Shutdown(reason="G1 sensor simulation complete"))])
     )
@@ -61,6 +71,7 @@ def generate_launch_description():
         DeclareLaunchArgument("ckpt"),
         pose_bridge,
         detector,
+        visualizer,
         replay,
         shutdown_after_replay,
     ])
