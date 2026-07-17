@@ -77,6 +77,9 @@ bash scripts/run_ros2_replay.sh
 # 回放点云和激光雷达位姿，并运行 E002 三帧时序检测节点
 bash scripts/run_ros2_temporal_replay.sh
 
+# 在同一 ROS 2 网络中订阅 Unitree G1 的点云与里程计，运行 E002 时序检测
+bash scripts/run_g1_temporal_detector.sh
+
 # 校验真实机器人数据并生成 OpenPCDet 索引
 bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 ```
@@ -93,6 +96,7 @@ bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 | [E004 ROS 2 部署](docs/08-e004-ros2-deployment.md) | 点云回放与 3D 检测节点 |
 | [E005 自定义数据](docs/09-e005-custom-robot-data.md) | 真实雷达数据格式和校验 |
 | [E006 时序 ROS 2](docs/11-e006-ros2-temporal-fusion.md) | 三帧缓存、位姿对齐与 E002 部署 |
+| [Unitree G1 预部署](docs/12-unitree-g1-deployment.md) | 外接 GPU、话题映射与上机前检查 |
 | [简历与面试表述](docs/10-resume-and-interview.md) | 可直接使用的项目描述 |
 
 ## 后续计划

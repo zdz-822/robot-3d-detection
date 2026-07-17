@@ -13,6 +13,7 @@ setup(
         (f"share/{package_name}/launch", [
             "launch/replay_and_detect.launch.py",
             "launch/replay_temporal_detect.launch.py",
+            "launch/g1_temporal_detector.launch.py",
         ]),
     ],
     install_requires=["setuptools"],
@@ -21,6 +22,7 @@ setup(
         "console_scripts": [
             "nuscenes_pointcloud_replay = robot_3d_detection.nuscenes_pointcloud_replay:main",
             "pointpillar_detector = robot_3d_detection.pointpillar_detector:main",
+            "odometry_to_lidar_pose = robot_3d_detection.odometry_to_lidar_pose:main",
         ],
     },
 )

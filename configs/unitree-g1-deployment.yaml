@@ -1,0 +1,11 @@
+# Fill these values only after confirming the actual Unitree G1 ROS 2 topic names and LiDAR installation pose.
+points_topic: /lidar/points
+odom_topic: /odom
+ros_domain_id: 0
+lidar_in_base:
+  x: 0.0
+  y: 0.0
+  z: 0.0
+  roll: 0.0
+  pitch: 0.0
+  yaw: 0.0

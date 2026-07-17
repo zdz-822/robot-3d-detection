@@ -8,7 +8,7 @@ import numpy as np
 import rclpy
 from geometry_msgs.msg import PoseStamped, Quaternion
 from rclpy.node import Node
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, PointField
 from vision_msgs.msg import Detection3D, Detection3DArray, ObjectHypothesisWithPose
 
 from pcdet.config import cfg, cfg_from_yaml_file
@@ -37,6 +37,28 @@ def pose_to_matrix(message):
     transform[:3, :3] = rotation
     transform[:3, 3] = [pose.position.x, pose.position.y, pose.position.z]
     return transform
+
+
+def pointcloud_to_xyzi(message):
+    """Read common PointCloud2 layouts without assuming a fixed point stride."""
+    fields = {field.name: field for field in message.fields}
+    required = ("x", "y", "z")
+    if any(name not in fields for name in required):
+        raise ValueError("PointCloud2 must contain x, y, and z float32 fields")
+    intensity_name = next((name for name in ("intensity", "reflectivity", "i") if name in fields), None)
+    selected = list(required) + ([intensity_name] if intensity_name else [])
+    for name in selected:
+        if fields[name].datatype != PointField.FLOAT32:
+            raise ValueError(f"PointCloud2 field {name} must use FLOAT32")
+    dtype = np.dtype({
+        "names": selected,
+        "formats": ["<f4"] * len(selected),
+        "offsets": [fields[name].offset for name in selected],
+        "itemsize": message.point_step,
+    })
+    records = np.frombuffer(message.data, dtype=dtype, count=message.width * message.height)
+    intensity = records[intensity_name] if intensity_name else np.ones(len(records), dtype=np.float32)
+    return np.column_stack((records["x"], records["y"], records["z"], intensity)).astype(np.float32, copy=False)
 
 
 class PointPillarsDetector(Node):
@@ -110,11 +132,11 @@ class PointPillarsDetector(Node):
         self.process_pointcloud(message, None)
 
     def process_pointcloud(self, message, global_from_lidar):
-        raw = np.frombuffer(message.data, dtype=np.float32).reshape(-1, message.point_step // 4)
+        raw = pointcloud_to_xyzi(message)
         if self.temporal_sweeps == 1:
-            points = np.column_stack((raw[:, :4], np.zeros(len(raw), dtype=np.float32)))
+            points = np.column_stack((raw, np.zeros(len(raw), dtype=np.float32)))
         else:
-            self.temporal_buffer.append((raw[:, :4].copy(), global_from_lidar, stamp_to_seconds(message.header.stamp)))
+            self.temporal_buffer.append((raw.copy(), global_from_lidar, stamp_to_seconds(message.header.stamp)))
             self.temporal_buffer = self.temporal_buffer[-self.temporal_sweeps:]
             if len(self.temporal_buffer) < self.temporal_sweeps:
                 self.get_logger().info(f"Buffering temporal scans: {len(self.temporal_buffer)}/{self.temporal_sweeps}")
