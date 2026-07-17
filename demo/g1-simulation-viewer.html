@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>G1 感知仿真回放</title>
+  <style>
+    :root { --ink: #142426; --paper: #f2eee4; --signal: #f24f2e; --lime: #c6ef67; --line: #8ea09a; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: radial-gradient(circle at 78% 8%, #dbf3a7 0 8%, transparent 30%), linear-gradient(135deg, #ebe5d8, #d4e7dc); font-family: Georgia, "Noto Serif SC", serif; }
+    main { width: min(1180px, calc(100% - 32px)); margin: 28px auto 42px; }
+    header { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 28px; border-bottom: 3px solid var(--ink); padding: 10px 0 22px; }
+    .eyebrow { margin: 0 0 8px; font: 700 12px/1.2 "Courier New", monospace; letter-spacing: .12em; color: var(--signal); }
+    h1 { margin: 0; font-size: clamp(34px, 6vw, 70px); letter-spacing: -.07em; line-height: .9; }
+    .stamp { width: 125px; padding: 13px; border: 2px solid var(--ink); background: var(--lime); font: 700 12px/1.35 "Courier New", monospace; transform: rotate(3deg); }
+    .stage { display: grid; grid-template-columns: minmax(0, 1fr) 270px; gap: 22px; margin-top: 24px; }
+    .screen { position: relative; overflow: hidden; min-height: 490px; background: #d8d6ca; border: 3px solid var(--ink); box-shadow: 8px 8px 0 var(--ink); }
+    .screen img { display: block; width: 100%; height: 100%; min-height: 490px; object-fit: contain; background: #d8d6ca; }
+    .frame-badge { position: absolute; top: 14px; left: 14px; color: white; background: var(--ink); padding: 9px 12px; font: 700 13px/1 "Courier New", monospace; }
+    .side { display: grid; align-content: start; gap: 13px; }
+    .card { border: 2px solid var(--ink); background: rgba(255,255,255,.48); padding: 15px; }
+    .card h2 { margin: 0 0 12px; font-size: 17px; }
+    .metric { display: flex; align-items: baseline; gap: 8px; font: 700 14px/1 "Courier New", monospace; }
+    .metric strong { font-size: 54px; letter-spacing: -.1em; color: var(--signal); }
+    .card p, .card li { margin: 0; font-size: 14px; line-height: 1.55; }
+    .card ul { margin: 0; padding-left: 18px; }
+    .controls { display: grid; grid-template-columns: auto 1fr auto; gap: 15px; align-items: center; margin-top: 29px; padding: 18px 0; border-bottom: 1px solid var(--ink); }
+    button { cursor: pointer; border: 2px solid var(--ink); background: var(--signal); color: #fff; padding: 11px 16px; font: 700 14px/1 "Courier New", monospace; box-shadow: 3px 3px 0 var(--ink); }
+    button:active { box-shadow: none; transform: translate(3px, 3px); }
+    input[type=range] { width: 100%; accent-color: var(--signal); }
+    #counter { font: 700 13px/1 "Courier New", monospace; white-space: nowrap; }
+    .note { margin: 19px 0 0; padding: 13px 16px; border-left: 6px solid var(--signal); background: rgba(255,255,255,.42); font-size: 14px; line-height: 1.55; }
+    @media (max-width: 760px) { .stage { grid-template-columns: 1fr; } .screen, .screen img { min-height: 330px; } header { grid-template-columns: 1fr; } .stamp { display: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div><p class="eyebrow">ROBOT 3D DETECTION / DATA-DRIVEN REPLAY</p><h1>G1 感知仿真<br>浏览器回放</h1></div>
+      <div class="stamp">12 FRAMES<br>3-SWEEP FUSION<br>POINTPILLARS</div>
+    </header>
+    <section class="stage">
+      <div class="screen">
+        <img id="frame" src="../artifacts/e003_bev/frames/frame_001.png" alt="3D 检测 BEV 回放帧">
+        <div class="frame-badge" id="badge">FRAME 01 / WARMUP</div>
+      </div>
+      <aside class="side">
+        <div class="card"><h2>当前检测目标</h2><div class="metric"><strong id="targets">0</strong><span>个目标</span></div><p id="status">正在积累第 1 帧点云</p></div>
+        <div class="card"><h2>画面说明</h2><ul><li>浅色点：LiDAR 点云</li><li>青色虚线：数据集真实框</li><li>彩色实线：模型预测框</li><li>白色三角：机器人位置与朝向</li></ul></div>
+        <div class="card"><h2>这是什么</h2><p>这是项目实际使用 nuScenes 连续点云得到的时序检测结果回放。它用于稳定展示感知效果，不包含 G1 的步态或运动控制。</p></div>
+      </aside>
+    </section>
+    <section class="controls">
+      <button id="play">暂停</button>
+      <input id="slider" type="range" min="1" max="12" value="1" aria-label="回放帧进度">
+      <span id="counter">01 / 12</span>
+    </section>
+    <p class="note">提示：前两帧不出检测框是正常的。三帧时序模型需要先缓存当前帧和两帧历史点云，之后才会开始预测目标。</p>
+  </main>
+  <script>
+    const targets = [0, 0, 2, 5, 8, 6, 9, 7, 9, 11, 14, 12];
+    const frame = document.querySelector('#frame');
+    const slider = document.querySelector('#slider');
+    const badge = document.querySelector('#badge');
+    const counter = document.querySelector('#counter');
+    const count = document.querySelector('#targets');
+    const status = document.querySelector('#status');
+    const button = document.querySelector('#play');
+    let current = 1, playing = true, timer;
+    function render(value) {
+      current = Number(value); const index = current - 1;
+      frame.src = `../artifacts/e003_bev/frames/frame_${String(current).padStart(3, '0')}.png`;
+      slider.value = current; counter.textContent = `${String(current).padStart(2, '0')} / 12`;
+      count.textContent = targets[index];
+      badge.textContent = current < 3 ? `FRAME ${String(current).padStart(2, '0')} / WARMUP` : `FRAME ${String(current).padStart(2, '0')} / FUSION ACTIVE`;
+      status.textContent = current < 3 ? `正在积累第 ${current} 帧点云` : '三帧融合检测结果已输出';
+    }
+    function tick() { render(current === 12 ? 1 : current + 1); }
+    function start() { clearInterval(timer); timer = setInterval(tick, 2000); playing = true; button.textContent = '暂停'; }
+    button.addEventListener('click', () => { if (playing) { clearInterval(timer); playing = false; button.textContent = '播放'; } else start(); });
+    slider.addEventListener('input', event => render(event.target.value));
+    render(1); start();
+  </script>
+</body>
+</html>
