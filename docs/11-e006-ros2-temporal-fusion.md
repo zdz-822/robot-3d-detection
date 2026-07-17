@@ -39,6 +39,7 @@ T_current_from_history = inverse(T_global_lidar(c)) * T_global_lidar(h)
 - 时序检测节点成功加载 E002 的 `MAX_SWEEPS=3` 权重；第 1、2 帧仅建立缓存，第 3 帧开始执行时序推理。
 - 在 12 帧回放中，后续 10 帧全部发布 `Detection3DArray`，每帧输出 2 至 14 个高置信度 3D 检测框。
 - E004 单帧回放在改动后复测通过，12 帧仍全部产生检测结果。
+- 在 RTX 4060 Laptop GPU 上，首次三帧推理因 CUDA 预热耗时约 1238 ms；之后 9 次节点内端到端检测耗时为 88.7 至 208.0 ms。该统计包含 PointCloud2 解析、三帧对齐、模型推理、NMS 和消息构造，不包含机器人传感器传输与 DDS 网络延迟。
 
 ## 复现入口
 

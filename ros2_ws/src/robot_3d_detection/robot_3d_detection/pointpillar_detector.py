@@ -2,6 +2,8 @@
 
 import math
 import os
+import time
+from collections import deque
 from pathlib import Path
 
 import numpy as np
@@ -95,6 +97,7 @@ class PointPillarsDetector(Node):
         self.pose_by_stamp = {}
         self.pending_clouds = {}
         self.temporal_buffer = []
+        self.inference_latencies_ms = deque(maxlen=30)
         self.publisher = self.create_publisher(Detection3DArray, self.get_parameter("output_topic").value, 10)
         self.subscription = self.create_subscription(PointCloud2, self.get_parameter("input_topic").value, self.on_pointcloud, 10)
         self.pose_subscription = None
@@ -132,6 +135,10 @@ class PointPillarsDetector(Node):
         self.process_pointcloud(message, None)
 
     def process_pointcloud(self, message, global_from_lidar):
+        import torch
+
+        torch.cuda.synchronize()
+        started_at = time.perf_counter()
         raw = pointcloud_to_xyzi(message)
         if self.temporal_sweeps == 1:
             points = np.column_stack((raw, np.zeros(len(raw), dtype=np.float32)))
@@ -146,10 +153,11 @@ class PointPillarsDetector(Node):
         batch_dict = self.dataset.collate_batch([data_dict])
         load_data_to_gpu(batch_dict)
 
-        import torch
-
         with torch.no_grad():
             prediction, _ = self.model.forward(batch_dict)
+        torch.cuda.synchronize()
+        latency_ms = (time.perf_counter() - started_at) * 1000.0
+        self.inference_latencies_ms.append(latency_ms)
         boxes = prediction[0]["pred_boxes"].detach().cpu().numpy()
         scores = prediction[0]["pred_scores"].detach().cpu().numpy()
         labels = prediction[0]["pred_labels"].detach().cpu().numpy()
@@ -173,7 +181,11 @@ class PointPillarsDetector(Node):
             detection.bbox.size.z = float(box[5])
             result.detections.append(detection)
         self.publisher.publish(result)
-        self.get_logger().info(f"Published {len(result.detections)} detections")
+        mean_latency_ms = sum(self.inference_latencies_ms) / len(self.inference_latencies_ms)
+        self.get_logger().info(
+            f"Published {len(result.detections)} detections; end-to-end detector latency "
+            f"{latency_ms:.1f} ms (rolling mean {mean_latency_ms:.1f} ms)"
+        )
 
     def fuse_temporal_points(self):
         """Align buffered LiDAR frames to the latest LiDAR pose and append time lag."""
