@@ -14,6 +14,7 @@ setup(
             "launch/replay_and_detect.launch.py",
             "launch/replay_temporal_detect.launch.py",
             "launch/g1_temporal_detector.launch.py",
+            "launch/g1_sensor_sim.launch.py",
         ]),
     ],
     install_requires=["setuptools"],

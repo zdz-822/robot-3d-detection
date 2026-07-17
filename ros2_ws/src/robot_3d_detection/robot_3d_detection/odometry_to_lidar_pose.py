@@ -64,8 +64,10 @@ class OdometryToLidarPose(Node):
         global_from_lidar = global_from_base @ self.base_from_lidar
         pose = PoseStamped()
         pose.header = message.header
-        pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = global_from_lidar[:3, 3]
-        pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w = matrix_to_quaternion(global_from_lidar[:3, :3])
+        pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = (float(value) for value in global_from_lidar[:3, 3])
+        pose.pose.orientation.x, pose.pose.orientation.y, pose.pose.orientation.z, pose.pose.orientation.w = (
+            float(value) for value in matrix_to_quaternion(global_from_lidar[:3, :3])
+        )
         self.publisher.publish(pose)
 
 

@@ -98,6 +98,7 @@ bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 | [E006 时序 ROS 2](docs/11-e006-ros2-temporal-fusion.md) | 三帧缓存、位姿对齐与 E002 部署 |
 | [Unitree G1 预部署](docs/12-unitree-g1-deployment.md) | 外接 GPU、话题映射与上机前检查 |
 | [G1 现场接入清单](docs/13-g1-field-onboarding.md) | 自动话题探测、rosbag 采集与安全上机步骤 |
+| [G1 传感器仿真](docs/14-g1-sensor-simulation.md) | 模拟 G1 点云和里程计，验证时序部署链路 |
 | [简历与面试表述](docs/10-resume-and-interview.md) | 可直接使用的项目描述 |
 
 ## 后续计划

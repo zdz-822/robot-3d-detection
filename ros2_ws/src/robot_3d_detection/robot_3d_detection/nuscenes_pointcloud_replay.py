@@ -6,6 +6,7 @@ from pathlib import Path
 import numpy as np
 import rclpy
 from geometry_msgs.msg import PoseStamped
+from nav_msgs.msg import Odometry
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2, PointField
 
@@ -28,6 +29,8 @@ class NuScenesPointCloudReplay(Node):
         self.declare_parameter("startup_delay_sec", 3.0)
         self.declare_parameter("publish_lidar_pose", False)
         self.declare_parameter("pose_topic", "/lidar/pose")
+        self.declare_parameter("publish_odometry", False)
+        self.declare_parameter("odom_topic", "/odom")
         data_root = Path(self.get_parameter("data_root").value)
         manifest_path = Path(self.get_parameter("manifest").value)
         if not data_root.exists() or not manifest_path.is_file():
@@ -41,8 +44,10 @@ class NuScenesPointCloudReplay(Node):
             raise FileNotFoundError(f"Replay frame is missing: {missing_paths[0]}")
         self.publisher = self.create_publisher(PointCloud2, self.get_parameter("topic").value, 10)
         self.publish_lidar_pose = bool(self.get_parameter("publish_lidar_pose").value)
+        self.publish_odometry = bool(self.get_parameter("publish_odometry").value)
         self.pose_publisher = self.create_publisher(PoseStamped, self.get_parameter("pose_topic").value, 10)
-        if self.publish_lidar_pose:
+        self.odom_publisher = self.create_publisher(Odometry, self.get_parameter("odom_topic").value, 10)
+        if self.publish_lidar_pose or self.publish_odometry:
             self.load_lidar_poses(data_root)
         self.index = 0
         self.period_sec = float(self.get_parameter("period_sec").value)
@@ -94,22 +99,33 @@ class NuScenesPointCloudReplay(Node):
         message.row_step = message.point_step * message.width
         message.is_dense = True
         message.data = points.tobytes()
+        if self.publish_lidar_pose or self.publish_odometry:
+            pose = self.make_pose(message, frame["global_from_lidar"])
         if self.publish_lidar_pose:
-            from pyquaternion import Quaternion
-
-            pose = PoseStamped()
-            pose.header = message.header
-            transform = frame["global_from_lidar"]
-            pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = transform[:3, 3]
-            rotation = Quaternion(matrix=transform[:3, :3])
-            pose.pose.orientation.x = rotation.x
-            pose.pose.orientation.y = rotation.y
-            pose.pose.orientation.z = rotation.z
-            pose.pose.orientation.w = rotation.w
             self.pose_publisher.publish(pose)
+        if self.publish_odometry:
+            odometry = Odometry()
+            odometry.header = message.header
+            odometry.child_frame_id = "base_link"
+            odometry.pose.pose = pose.pose
+            self.odom_publisher.publish(odometry)
         self.publisher.publish(message)
         self.get_logger().info(f"Published frame {self.index + 1}/{len(self.frame_paths)} ({len(points)} points)")
         self.index += 1
+
+    @staticmethod
+    def make_pose(pointcloud_message, global_from_lidar):
+        from pyquaternion import Quaternion
+
+        pose = PoseStamped()
+        pose.header = pointcloud_message.header
+        pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = global_from_lidar[:3, 3]
+        rotation = Quaternion(matrix=global_from_lidar[:3, :3])
+        pose.pose.orientation.x = rotation.x
+        pose.pose.orientation.y = rotation.y
+        pose.pose.orientation.z = rotation.z
+        pose.pose.orientation.w = rotation.w
+        return pose
 
 
 def main():
