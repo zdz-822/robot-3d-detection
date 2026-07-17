@@ -20,6 +20,7 @@
 - **可视化演示**：对同一场景连续 12 帧执行推理，自动输出 BEV PNG、GIF 和帧级清单，直观展示点云、真实框、预测框、类别和置信度。
 - **ROS 2 时序部署链路**：在 GPU 容器中构建 ROS 2 Humble 节点，完成 `PointCloud2 + PoseStamped -> 三帧对齐 -> PointPillars -> Detection3DArray` 离线回放；从第 3 帧起使用 E002 权重发布时序检测结果。
 - **RViz 三维框展示**：将检测结果转换为 `MarkerArray`，以彩色 3D 框和类别置信度文字显示；G1 传感器仿真已完成 12 帧端到端验证。
+- **稳定性评测**：完成 3 轮 ROS 2 连续回放，`3/3` 完整结束、`30/30` 检测帧发布；排除预热后稳定推理延迟 P50 / P95 为 `113.7 / 136.4 ms`。
 - **真实数据接入接口**：定义 `Pedestrian / Cart / Pallet / Cone` 四类机器人目标的数据规范，提供原始 `.bin` 转换、3D 标注校验、数据划分检查和 OpenPCDet 索引生成工具。
 
 ## 实验结果
@@ -91,6 +92,9 @@ bash scripts/run_g1_temporal_detector.sh
 # 模拟 G1 点云与里程计，并输出可在 RViz 显示的 3D 检测框
 bash scripts/run_g1_sensor_sim.sh
 
+# 连续运行 3 轮 G1 传感器仿真，生成稳定性与延迟报告
+bash scripts/run_e009_stability_benchmark.sh 3
+
 # 打开 RViz，直接观看模拟点云和 3D 检测框（需要 Windows WSLg）
 bash scripts/run_g1_sensor_sim_rviz.sh
 
@@ -116,6 +120,7 @@ bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 | [E007 RViz 可视化](docs/15-e007-rviz-visualization.md) | 将 3D 检测结果转换为 RViz 彩色检测框 |
 | [新手 RViz 使用手册](docs/16-beginner-rviz-guide.md) | 从打开 Ubuntu 到观看三维点云和检测框 |
 | [E008 项目展示材料](docs/17-e008-demo-materials.md) | 一页介绍、60 秒讲稿与录屏顺序 |
+| [E009 稳定性评测](docs/18-e009-stability-benchmark.md) | 连续回放、检测完整性与延迟分布报告 |
 | [简历与面试表述](docs/10-resume-and-interview.md) | 可直接使用的项目描述 |
 
 ## 后续计划
