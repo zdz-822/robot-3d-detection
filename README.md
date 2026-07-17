@@ -10,6 +10,8 @@
 
 本机可直接打开 [浏览器仿真回放](demo/g1-simulation-viewer.html)，无需 RViz 图形环境。
 
+用于老师展示、录屏和面试讲解的材料见 [项目一页介绍](demo/project-one-pager.html) 和 [E008 展示材料](docs/17-e008-demo-materials.md)。
+
 浅色点为激光雷达点云，青色虚线框为数据集标注，彩色实线框为模型预测。白色三角形表示机器人位置与朝向；例如 `car 0.82` 表示预测类别为车辆、置信度为 0.82。
 
 ## 项目亮点
@@ -113,6 +115,7 @@ bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 | [G1 传感器仿真](docs/14-g1-sensor-simulation.md) | 模拟 G1 点云和里程计，验证时序部署链路 |
 | [E007 RViz 可视化](docs/15-e007-rviz-visualization.md) | 将 3D 检测结果转换为 RViz 彩色检测框 |
 | [新手 RViz 使用手册](docs/16-beginner-rviz-guide.md) | 从打开 Ubuntu 到观看三维点云和检测框 |
+| [E008 项目展示材料](docs/17-e008-demo-materials.md) | 一页介绍、60 秒讲稿与录屏顺序 |
 | [简历与面试表述](docs/10-resume-and-interview.md) | 可直接使用的项目描述 |
 
 ## 后续计划
