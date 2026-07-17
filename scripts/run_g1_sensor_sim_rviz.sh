@@ -18,9 +18,12 @@ done
 
 # WSLg forwards the Linux GUI window to Windows. The simulator and RViz stay in one container.
 docker run --rm --gpus all --ipc=host --shm-size=8g \
+  --device=/dev/dxg \
   -e DISPLAY -e WAYLAND_DISPLAY -e XDG_RUNTIME_DIR \
+  -e LD_LIBRARY_PATH=/usr/lib/wsl/lib \
   -v /mnt/wslg:/mnt/wslg \
   -v /tmp/.X11-unix:/tmp/.X11-unix \
+  -v /usr/lib/wsl:/usr/lib/wsl:ro \
   -v "$source_dir:/workspace/OpenPCDet" \
   -v "$dataset_dir:$dataset_dir:ro" \
   -v "$project_dir:/workspace/project" \
@@ -37,6 +40,7 @@ docker run --rm --gpus all --ipc=host --shm-size=8g \
       data_root:=$dataset_dir \
       manifest:=/workspace/project/artifacts/e003_bev/manifest.json \
       cfg_file:=/workspace/OpenPCDet/tools/cfgs/nuscenes_models/pointpillar_nuscenes_mini_3sweeps.yaml \
-      ckpt:=$container_checkpoint & \
+      ckpt:=$container_checkpoint \
+      period_sec:=2.0 & \
     sim_pid=\$!; trap 'kill \$sim_pid 2>/dev/null || true' EXIT; \
     rviz2 -d /workspace/project/configs/g1_sensor_sim.rviz"

@@ -11,6 +11,7 @@ def generate_launch_description():
     manifest = LaunchConfiguration("manifest")
     cfg_file = LaunchConfiguration("cfg_file")
     ckpt = LaunchConfiguration("ckpt")
+    period_sec = LaunchConfiguration("period_sec")
     replay = Node(
         package="robot_3d_detection",
         executable="nuscenes_pointcloud_replay",
@@ -21,7 +22,7 @@ def generate_launch_description():
             "topic": "/g1_sim/lidar/points",
             "publish_odometry": True,
             "odom_topic": "/g1_sim/odom",
-            "period_sec": 0.5,
+            "period_sec": period_sec,
             "startup_delay_sec": 15.0,
         }],
         output="screen",
@@ -69,6 +70,7 @@ def generate_launch_description():
         DeclareLaunchArgument("manifest"),
         DeclareLaunchArgument("cfg_file"),
         DeclareLaunchArgument("ckpt"),
+        DeclareLaunchArgument("period_sec", default_value="0.5"),
         pose_bridge,
         detector,
         visualizer,
