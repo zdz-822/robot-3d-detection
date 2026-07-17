@@ -31,6 +31,17 @@ G1 传感器仿真使用独立命名空间：`/g1_sim/perception/detections -> /
 
 同时添加 `PointCloud2` Display 查看点云。固定坐标系应选择与点云 header 一致的 LiDAR frame。第一阶段只观察视觉结果，不接入运动控制。
 
+## 一键查看 G1 仿真
+
+Windows 已启用 WSLg 时，先重新构建包含 RViz 的 ROS 2 镜像，然后运行：
+
+```bash
+bash scripts/build_ros2_image.sh
+bash scripts/run_g1_sensor_sim_rviz.sh
+```
+
+RViz 窗口会自动出现在 Windows 桌面。配置已预设为显示 `/g1_sim/lidar/points` 点云和 `/g1_sim/perception/markers` 三维检测框；程序会在 12 帧回放结束后自动停止。可用鼠标左键拖动旋转视角、滚轮缩放、鼠标中键拖动平移。
+
 ## 仿真验证结果
 
 2026-07-17 已使用 G1 传感器级仿真完成 12 帧端到端验证：

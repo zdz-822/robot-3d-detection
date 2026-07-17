@@ -87,6 +87,9 @@ bash scripts/run_g1_temporal_detector.sh
 # 模拟 G1 点云与里程计，并输出可在 RViz 显示的 3D 检测框
 bash scripts/run_g1_sensor_sim.sh
 
+# 打开 RViz，直接观看模拟点云和 3D 检测框（需要 Windows WSLg）
+bash scripts/run_g1_sensor_sim_rviz.sh
+
 # 校验真实机器人数据并生成 OpenPCDet 索引
 bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 ```

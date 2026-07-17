@@ -1,0 +1,119 @@
+Panels:
+  - Class: rviz_common/Displays
+    Help Height: 78
+    Name: Displays
+    Property Tree Widget:
+      Expanded:
+        - /Global Options1
+        - /G1 Sim Point Cloud1
+        - /3D Detections1
+      Splitter Ratio: 0.5
+    Tree Height: 527
+  - Class: rviz_common/Selection
+    Name: Selection
+  - Class: rviz_common/Tool Properties
+    Expanded:
+      - /2D Goal Pose1
+      - /Publish Point1
+    Name: Tool Properties
+    Splitter Ratio: 0.588679
+  - Class: rviz_common/Views
+    Expanded:
+      - /Current View1
+    Name: Views
+    Splitter Ratio: 0.5
+Preferences:
+  PromptSaveOnExit: true
+Visualization Manager:
+  Class: ""
+  Displays:
+    - Alpha: 0.35
+      Class: rviz_default_plugins/PointCloud2
+      Color: 255; 255; 255
+      Enabled: true
+      Name: G1 Sim Point Cloud
+      Point Size: 3
+      Point Size (m): 0.03
+      Style: Points
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /g1_sim/lidar/points
+      Use Fixed Frame: true
+    - Class: rviz_default_plugins/MarkerArray
+      Enabled: true
+      Name: 3D Detections
+      Namespaces:
+        detection_boxes: true
+        detection_labels: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /g1_sim/perception/markers
+  Enabled: true
+  Global Options:
+    Background Color: 48; 48; 48
+    Fixed Frame: lidar
+    Frame Rate: 30
+  Name: root
+  Tools:
+    - Class: rviz_default_plugins/Interact
+      Hide Inactive Objects: true
+    - Class: rviz_default_plugins/MoveCamera
+    - Class: rviz_default_plugins/Select
+    - Class: rviz_default_plugins/FocusCamera
+    - Class: rviz_default_plugins/Measure
+    - Class: rviz_default_plugins/SetInitialPose
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /initialpose
+    - Class: rviz_default_plugins/SetGoal
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /goal_pose
+    - Class: rviz_default_plugins/PublishPoint
+      Single click: true
+      Topic:
+        Depth: 5
+        Durability Policy: Volatile
+        History Policy: Keep Last
+        Reliability Policy: Reliable
+        Value: /clicked_point
+  Value: true
+  Views:
+    Current:
+      Class: rviz_default_plugins/Orbit
+      Distance: 36.0
+      Enable Stereo Rendering:
+        Stereo Eye Separation: 0.06
+        Stereo Focal Distance: 1
+        Swap Stereo Eyes: false
+        Value: false
+      Focal Point:
+        X: 0
+        Y: 0
+        Z: 0
+      Invert Z Axis: false
+      Name: Current View
+      Near Clip Distance: 0.01
+      Pitch: 0.85
+      Target Frame: <Fixed Frame>
+      Yaw: 0.78
+Window Geometry:
+  Height: 900
+  Hide Left Dock: false
+  Hide Right Dock: false
+  QMainWindow State: 000000ff00000000fd0000000300000000000001560000034dfc0200000001fb000000100044006900730070006c006100790073010000003e0000034d000000c900ffffff000000010000010f0000034dfc0200000003fb0000001200530065006c0065006300740069006f006e0000000014000000e0000000a400fffffffb0000001a0054006f006f006c002000500072006f007000650072007400690065007301000000fa0000008a000000a400fffffffb0000000a00560069006500770073010000018a000001c1000000a400ffffff000000010000013d0000034dfc0200000001fb000000100054006f006f006c002000500072006f007000650072007400690065007301000000000000034d000000a400ffffff000003870000034d00000004000000040000000800000008fc00000000
+  Width: 1440
+  X: 80
+  Y: 60
