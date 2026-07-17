@@ -2,6 +2,7 @@
 
 import rclpy
 from rclpy.duration import Duration
+from rclpy.executors import ExternalShutdownException
 from rclpy.node import Node
 from visualization_msgs.msg import Marker, MarkerArray
 from vision_msgs.msg import Detection3DArray
@@ -77,7 +78,7 @@ def main():
     node = DetectionMarkerVisualizer()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

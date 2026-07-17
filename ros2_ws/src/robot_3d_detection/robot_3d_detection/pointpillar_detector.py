@@ -8,6 +8,7 @@ from pathlib import Path
 
 import numpy as np
 import rclpy
+from rclpy.executors import ExternalShutdownException
 from geometry_msgs.msg import PoseStamped, Quaternion
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2, PointField
@@ -205,7 +206,7 @@ def main():
     node = PointPillarsDetector()
     try:
         rclpy.spin(node)
-    except KeyboardInterrupt:
+    except (KeyboardInterrupt, ExternalShutdownException):
         pass
     finally:
         node.destroy_node()

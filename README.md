@@ -110,6 +110,7 @@ bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 | [G1 现场接入清单](docs/13-g1-field-onboarding.md) | 自动话题探测、rosbag 采集与安全上机步骤 |
 | [G1 传感器仿真](docs/14-g1-sensor-simulation.md) | 模拟 G1 点云和里程计，验证时序部署链路 |
 | [E007 RViz 可视化](docs/15-e007-rviz-visualization.md) | 将 3D 检测结果转换为 RViz 彩色检测框 |
+| [新手 RViz 使用手册](docs/16-beginner-rviz-guide.md) | 从打开 Ubuntu 到观看三维点云和检测框 |
 | [简历与面试表述](docs/10-resume-and-interview.md) | 可直接使用的项目描述 |
 
 ## 后续计划
