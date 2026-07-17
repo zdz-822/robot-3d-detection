@@ -14,7 +14,7 @@
 
 - **多帧时序融合**：将当前帧与两帧历史 LiDAR 点云按 ego pose 对齐，并引入时间差特征；在相同模型、数据划分和训练轮数下，mAP 从 `0.0931` 提升到 `0.1176`。
 - **可视化演示**：对同一场景连续 12 帧执行推理，自动输出 BEV PNG、GIF 和帧级清单，直观展示点云、真实框、预测框、类别和置信度。
-- **ROS 2 部署链路**：在 GPU 容器中构建 ROS 2 Humble 节点，完成 `PointCloud2 -> PointPillars -> Detection3DArray` 离线回放；12 帧点云均成功发布并产生 3D 检测结果。
+- **ROS 2 时序部署链路**：在 GPU 容器中构建 ROS 2 Humble 节点，完成 `PointCloud2 + PoseStamped -> 三帧对齐 -> PointPillars -> Detection3DArray` 离线回放；从第 3 帧起使用 E002 权重发布时序检测结果。
 - **真实数据接入接口**：定义 `Pedestrian / Cart / Pallet / Cone` 四类机器人目标的数据规范，提供原始 `.bin` 转换、3D 标注校验、数据划分检查和 OpenPCDet 索引生成工具。
 
 ## 实验结果
@@ -32,17 +32,17 @@
 nuScenes / 真实机器人 LiDAR
              |
              v
-    点云预处理与格式转换
+    点云预处理、格式转换与位姿发布
              |
              +--> OpenPCDet PointPillars 训练与评测
              |           |
              |           v
              |      BEV 连续帧可视化
              |
-             +--> ROS 2 PointCloud2 回放
+             +--> ROS 2 PointCloud2 + PoseStamped 回放
                          |
                          v
-                PointPillars 推理节点
+          单帧 / 三帧时序 PointPillars 节点
                          |
                          v
         vision_msgs / Detection3DArray
@@ -74,6 +74,9 @@ bash scripts/build_ros2_image.sh
 # 回放 12 帧点云，并运行 ROS 2 检测节点
 bash scripts/run_ros2_replay.sh
 
+# 回放点云和激光雷达位姿，并运行 E002 三帧时序检测节点
+bash scripts/run_ros2_temporal_replay.sh
+
 # 校验真实机器人数据并生成 OpenPCDet 索引
 bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 ```
@@ -89,13 +92,13 @@ bash scripts/prepare_robot_dataset.sh /path/to/project /path/to/custom-data
 | [E003 可视化](docs/07-e003-visualization.md) | BEV 图片与 GIF 生成 |
 | [E004 ROS 2 部署](docs/08-e004-ros2-deployment.md) | 点云回放与 3D 检测节点 |
 | [E005 自定义数据](docs/09-e005-custom-robot-data.md) | 真实雷达数据格式和校验 |
+| [E006 时序 ROS 2](docs/11-e006-ros2-temporal-fusion.md) | 三帧缓存、位姿对齐与 E002 部署 |
 | [简历与面试表述](docs/10-resume-and-interview.md) | 可直接使用的项目描述 |
 
 ## 后续计划
 
 1. 接入真实机器人 LiDAR 数据，完成小规模标注和微调。
-2. 在 ROS 2 中增加三帧缓存与 ego pose 对齐，将 E002 时序融合接入在线推理。
-3. 针对机器人类别接入自定义 mAP、延迟和稳定性评测。
+2. 针对机器人类别接入自定义 mAP、延迟和稳定性评测。
 
 ## 致谢与许可
 

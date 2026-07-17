@@ -5,6 +5,7 @@ from pathlib import Path
 
 import numpy as np
 import rclpy
+from geometry_msgs.msg import PoseStamped
 from rclpy.node import Node
 from sensor_msgs.msg import PointCloud2, PointField
 
@@ -25,20 +26,24 @@ class NuScenesPointCloudReplay(Node):
         self.declare_parameter("topic", "/lidar/points")
         self.declare_parameter("period_sec", 0.5)
         self.declare_parameter("startup_delay_sec", 3.0)
+        self.declare_parameter("publish_lidar_pose", False)
+        self.declare_parameter("pose_topic", "/lidar/pose")
         data_root = Path(self.get_parameter("data_root").value)
         manifest_path = Path(self.get_parameter("manifest").value)
         if not data_root.exists() or not manifest_path.is_file():
             raise FileNotFoundError("data_root or E003 manifest is missing")
 
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        self.frame_paths = [
-            data_root / "samples" / "LIDAR_TOP" / f"{frame['frame_id']}.bin"
-            for frame in manifest["frames"]
-        ]
+        self.frames = [{"path": data_root / "samples" / "LIDAR_TOP" / f"{frame['frame_id']}.bin", "token": frame["token"]} for frame in manifest["frames"]]
+        self.frame_paths = [frame["path"] for frame in self.frames]
         missing_paths = [path for path in self.frame_paths if not path.is_file()]
         if missing_paths:
             raise FileNotFoundError(f"Replay frame is missing: {missing_paths[0]}")
         self.publisher = self.create_publisher(PointCloud2, self.get_parameter("topic").value, 10)
+        self.publish_lidar_pose = bool(self.get_parameter("publish_lidar_pose").value)
+        self.pose_publisher = self.create_publisher(PoseStamped, self.get_parameter("pose_topic").value, 10)
+        if self.publish_lidar_pose:
+            self.load_lidar_poses(data_root)
         self.index = 0
         self.period_sec = float(self.get_parameter("period_sec").value)
         self.timer = self.create_timer(float(self.get_parameter("startup_delay_sec").value), self.start_replay)
@@ -52,13 +57,31 @@ class NuScenesPointCloudReplay(Node):
         self.timer = self.create_timer(self.period_sec, self.publish_next)
         self.publish_next()
 
+    def load_lidar_poses(self, data_root):
+        """Attach a global-from-lidar transform to each replayed scan."""
+        from nuscenes.nuscenes import NuScenes
+        from pyquaternion import Quaternion
+
+        nusc = NuScenes(version="v1.0-mini", dataroot=str(data_root), verbose=False)
+        for frame in self.frames:
+            sample = nusc.get("sample", frame["token"])
+            sample_data = nusc.get("sample_data", sample["data"]["LIDAR_TOP"])
+            ego_pose = nusc.get("ego_pose", sample_data["ego_pose_token"])
+            calibrated_sensor = nusc.get("calibrated_sensor", sample_data["calibrated_sensor_token"])
+            global_from_ego = Quaternion(ego_pose["rotation"]).transformation_matrix
+            global_from_ego[:3, 3] = ego_pose["translation"]
+            ego_from_lidar = Quaternion(calibrated_sensor["rotation"]).transformation_matrix
+            ego_from_lidar[:3, 3] = calibrated_sensor["translation"]
+            frame["global_from_lidar"] = global_from_ego @ ego_from_lidar
+
     def publish_next(self):
         if self.index >= len(self.frame_paths):
             self.get_logger().info("Replay complete")
             self.timer.cancel()
             raise SystemExit(0)
 
-        raw_points = np.fromfile(self.frame_paths[self.index], dtype=np.float32).reshape(-1, 5)
+        frame = self.frames[self.index]
+        raw_points = np.fromfile(frame["path"], dtype=np.float32).reshape(-1, 5)
         points = np.ascontiguousarray(raw_points[:, :4], dtype=np.float32)
         message = PointCloud2()
         message.header.stamp = self.get_clock().now().to_msg()
@@ -71,6 +94,19 @@ class NuScenesPointCloudReplay(Node):
         message.row_step = message.point_step * message.width
         message.is_dense = True
         message.data = points.tobytes()
+        if self.publish_lidar_pose:
+            from pyquaternion import Quaternion
+
+            pose = PoseStamped()
+            pose.header = message.header
+            transform = frame["global_from_lidar"]
+            pose.pose.position.x, pose.pose.position.y, pose.pose.position.z = transform[:3, 3]
+            rotation = Quaternion(matrix=transform[:3, :3])
+            pose.pose.orientation.x = rotation.x
+            pose.pose.orientation.y = rotation.y
+            pose.pose.orientation.z = rotation.z
+            pose.pose.orientation.w = rotation.w
+            self.pose_publisher.publish(pose)
         self.publisher.publish(message)
         self.get_logger().info(f"Published frame {self.index + 1}/{len(self.frame_paths)} ({len(points)} points)")
         self.index += 1

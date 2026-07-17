@@ -10,7 +10,10 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/robot_3d_detection"]),
         (f"share/{package_name}", ["package.xml"]),
-        (f"share/{package_name}/launch", ["launch/replay_and_detect.launch.py"]),
+        (f"share/{package_name}/launch", [
+            "launch/replay_and_detect.launch.py",
+            "launch/replay_temporal_detect.launch.py",
+        ]),
     ],
     install_requires=["setuptools"],
     zip_safe=True,
